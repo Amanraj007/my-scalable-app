@@ -22,15 +22,5 @@ pipeline {
         }
       }
     }
-    /* stage('Deploy') {
-      steps {
-        // Assumes kubeconfig is stored in Jenkins credentials or Jenkins agent has kubectl configured
-        sh '''
-          kubectl set image deployment/scalable-app app=$IMAGE -n scalable-app || kubectl apply -f k8s/deployment.yaml
-          kubectl apply -f k8s/service.yaml
-        '''
-      }
-    }
   }
 }
-*/
