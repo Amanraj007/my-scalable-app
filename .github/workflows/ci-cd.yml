@@ -40,6 +40,7 @@ jobs:
         run: echo "IMAGE_TAG=${{ github.sha }}" >> $GITHUB_ENV
 
   deploy:
+    if: secrets.KUBE_CONFIG != ''   # ✅ only runs if kubeconfig secret is set
     needs: build-push
     runs-on: ubuntu-latest
 
@@ -60,17 +61,17 @@ jobs:
 
       - name: Deploy to Kubernetes
         env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}  # base64-encoded kubeconfig
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
           IMAGE: aman65f/scalable-app:${{ github.sha }}
         run: |
           # Decode kubeconfig
           echo "$KUBE_CONFIG_DATA" | base64 --decode > kubeconfig
           export KUBECONFIG=$PWD/kubeconfig
 
-          # Update image in deployment.yaml
+          # Update deployment with new image
           yq e -i '.spec.template.spec.containers[0].image = strenv(IMAGE)' k8s/deployment.yaml
 
-          # Apply all manifests
+          # Apply manifests
           kubectl apply -f k8s/namespace.yaml
           kubectl apply -f k8s/configmap.yaml
           kubectl apply -f k8s/secret.yaml
