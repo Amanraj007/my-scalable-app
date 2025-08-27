@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: scalable-app
+data:
+  WELCOME_MSG: "Hello from aman65f scalable app!"
+

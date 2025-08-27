@@ -1,0 +1,36 @@
+pipeline {
+  agent any
+  environment {
+    IMAGE = "aman65f/scalable-app:${env.BUILD_NUMBER}"
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+    stage('Build') {
+      steps {
+        sh 'docker build -t $IMAGE ./app'
+      }
+    }
+    stage('Login & Push') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'dockers-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+          sh 'docker push $IMAGE'
+        }
+      }
+    }
+    stage('Deploy') {
+      steps {
+        // Assumes kubeconfig is stored in Jenkins credentials or Jenkins agent has kubectl configured
+        sh '''
+          kubectl set image deployment/scalable-app app=$IMAGE -n scalable-app || kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+        '''
+      }
+    }
+  }
+}
+
