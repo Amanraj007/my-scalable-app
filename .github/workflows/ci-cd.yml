@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up QEMU
@@ -28,7 +28,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push
+      - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
           push: true
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Install kubectl
@@ -53,17 +53,24 @@ jobs:
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
 
-      - name: Install yq
-        run: sudo apt-get update && sudo apt-get install -y yq
+      - name: Install yq v4
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/download/v4.45.1/yq_linux_amd64 -O /usr/local/bin/yq
+          sudo chmod +x /usr/local/bin/yq
 
-      - name: Update k8s image and apply manifests
+      - name: Deploy to Kubernetes
         env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}  # base64-encoded kubeconfig
           IMAGE: aman65f/scalable-app:${{ github.sha }}
         run: |
+          # Decode kubeconfig
           echo "$KUBE_CONFIG_DATA" | base64 --decode > kubeconfig
           export KUBECONFIG=$PWD/kubeconfig
-          yq e '.spec.template.spec.containers[0].image = strenv(IMAGE)' -i k8s/deployment.yaml
+
+          # Update image in deployment.yaml
+          yq e -i '.spec.template.spec.containers[0].image = strenv(IMAGE)' k8s/deployment.yaml
+
+          # Apply all manifests
           kubectl apply -f k8s/namespace.yaml
           kubectl apply -f k8s/configmap.yaml
           kubectl apply -f k8s/secret.yaml
