@@ -22,7 +22,7 @@ pipeline {
         }
       }
     }
-    stage('Deploy') {
+    /* stage('Deploy') {
       steps {
         // Assumes kubeconfig is stored in Jenkins credentials or Jenkins agent has kubectl configured
         sh '''
@@ -33,4 +33,4 @@ pipeline {
     }
   }
 }
-
+*/
