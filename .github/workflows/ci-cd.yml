@@ -32,9 +32,8 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: true
-          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME }}:latest
           file: ./app/Dockerfile
           context: ./app
-
-      - name: Set image tag output
-        run: echo "IMAGE_TAG=${{ github.sha }}" >> $GITHUB_ENV
