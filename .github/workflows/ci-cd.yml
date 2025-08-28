@@ -37,3 +37,6 @@ jobs:
             ${{ env.IMAGE_NAME }}:latest
           file: ./app/Dockerfile
           context: ./app
+
+      - name: Set image tag output
+        run: echo "IMAGE_TAG=${{ github.sha }}" >> $GITHUB_ENV
